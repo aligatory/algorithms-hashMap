@@ -1,34 +1,31 @@
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MyHashMap implements Map<String, String> {
-
-    private Node[] nodes;
+    private int nodesCount;
+    private Node[] table;
     private double loadFactor = .75;
 
     public MyHashMap(int initialCapacity) {
-        nodes = new Node[initialCapacity];
+        table = new Node[initialCapacity];
     }
 
     public MyHashMap(int initialCapacity, int loadFactor) {
-        nodes = new Node[initialCapacity];
+        table = new Node[initialCapacity];
         this.loadFactor = loadFactor;
     }
 
     public MyHashMap() {
-        nodes = new Node[16];
+        table = new Node[16];
     }
 
     @Override
     public int size() {
-        return 0;
+        return nodesCount;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return nodesCount == 0;
     }
 
     @Override
@@ -48,7 +45,31 @@ public class MyHashMap implements Map<String, String> {
 
     @Override
     public String put(String key, String value) {
-        return null;
+        int hash = key.hashCode();
+        int index = getNodeIndex(hash);
+        Node firstNode = table[index];
+        if (firstNode == null){
+            table[index] = new Node(hash, key, value,null);
+            nodesCount++;
+        }
+        Optional<Node> node = findSimilarNode(hash, key);
+        if (!node.isPresent()){
+            table[index] = new Node(hash, key, value, firstNode);
+            nodesCount++;
+        }else {
+            node.get().setValue(value);
+        }
+
+        return value;
+
+    }
+
+    private Optional<Node> findSimilarNode(final int hash, final String key) {
+        return Arrays.stream(table)
+                .filter(Objects::nonNull)
+                .filter(node -> node.hash == hash)
+                .filter(node -> node.key.equals(key))
+                .findAny();
     }
 
     @Override
@@ -81,6 +102,40 @@ public class MyHashMap implements Map<String, String> {
         return null;
     }
 
-    class Node {
+
+    private int getNodeIndex(int hash) {
+        return (hash & (table.length - 1));
+    }
+
+    static class Node implements Entry<String, String> {
+
+        final int hash;
+        final String key;
+        String value;
+        Node next;
+
+        Node(int hash, String key, String value, Node next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+
+
+        @Override
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String setValue(String value) {
+            this.value = value;
+            return value;
+        }
     }
 }
