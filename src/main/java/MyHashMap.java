@@ -1,3 +1,5 @@
+import jdk.internal.jline.internal.Nullable;
+
 import java.util.*;
 
 public class MyHashMap implements Map<String, String> {
@@ -30,7 +32,9 @@ public class MyHashMap implements Map<String, String> {
 
     @Override
     public boolean containsKey(Object key) {
-        return false;
+        int hash = key.hashCode();
+        int index = getNodeIndex(hash);
+        return findSimilarNode(hash, table[index], key).isPresent();
     }
 
     @Override
@@ -48,28 +52,32 @@ public class MyHashMap implements Map<String, String> {
         int hash = key.hashCode();
         int index = getNodeIndex(hash);
         Node firstNode = table[index];
-        if (firstNode == null){
-            table[index] = new Node(hash, key, value,null);
+        if (firstNode == null) {
+            table[index] = new Node(hash, key, value, null);
             nodesCount++;
-        }
-        Optional<Node> node = findSimilarNode(hash, key);
-        if (!node.isPresent()){
-            table[index] = new Node(hash, key, value, firstNode);
-            nodesCount++;
-        }else {
-            node.get().setValue(value);
+        } else {
+            Optional<Node> node = findSimilarNode(hash, firstNode, key);
+            if (!node.isPresent()) {
+                table[index] = new Node(hash, key, value, firstNode);
+                nodesCount++;
+            } else {
+                node.get().setValue(value);
+            }
         }
 
         return value;
 
     }
 
-    private Optional<Node> findSimilarNode(final int hash, final String key) {
-        return Arrays.stream(table)
-                .filter(Objects::nonNull)
-                .filter(node -> node.hash == hash)
-                .filter(node -> node.key.equals(key))
-                .findAny();
+    private Optional<Node> findSimilarNode(final int hash, @Nullable Node node, final Object key) {
+        if (node == null) return Optional.empty();
+        while (node.next != null) {
+            if (node.hash == hash && node.key.equals(key)) {
+                return Optional.of(node);
+            }
+            node = node.next;
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -94,6 +102,8 @@ public class MyHashMap implements Map<String, String> {
 
     @Override
     public Collection<String> values() {
+        List<String> values = new ArrayList<>(nodesCount);
+        // TODO Node iterator
         return null;
     }
 
