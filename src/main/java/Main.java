@@ -5,12 +5,18 @@ public class Main {
 
 
     public static void main(String[] args) {
-        Map<String, String> map = new MyHashMap();
-//        String a = map.put("1","1");
-//        String b = map.put("1","2");
-//
-//        System.out.println(b);
+//        new HashMap().
+        MyHashMap map = new MyHashMap();
+        for (int i = 0 ; i < 17;i++){
+            map.put(String.valueOf(i), String.valueOf(i));
+        }
         System.out.println(map.size());
-        System.out.println(map.containsKey("1"));
+        System.out.println(map.get("12"));
+        System.out.println(map.size());
+        System.out.println(map.remove("12"));
+        System.out.println(map.get("12"));
+        System.out.println(map.size());
+        System.out.println(map.capacity());
+
     }
 }
