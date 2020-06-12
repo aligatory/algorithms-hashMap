@@ -1,12 +1,12 @@
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class MyHashMap implements Map<String, String> {
+public class MyHashMap{
     private int nodesCount;
     private Node[] table;
     private double loadFactor = .75;
-
     public MyHashMap(int initialCapacity) {
         table = new Node[initialCapacity];
     }
@@ -20,23 +20,23 @@ public class MyHashMap implements Map<String, String> {
         table = new Node[16];
     }
 
-    @Override
+    
     public int size() {
         return nodesCount;
     }
 
-    @Override
+    
     public boolean isEmpty() {
         return nodesCount == 0;
     }
 
-    @Override
+    
     public boolean containsKey(Object key) {
         KeyParams params = getKeyParams(key);
         return findNode(params.hash, table[params.index], key).isPresent();
     }
 
-    @Override
+    
     public boolean containsValue(Object value) {
         return values()
                 .stream()
@@ -44,7 +44,7 @@ public class MyHashMap implements Map<String, String> {
                 .anyMatch(v -> v.equals(value));
     }
 
-    @Override
+    
     public String get(Object key) {
         KeyParams params = getKeyParams(key);
         Optional<Node> node = findNode(params.getHash(), table[params.getIndex()], params.getKey());
@@ -81,7 +81,7 @@ public class MyHashMap implements Map<String, String> {
         private Object key;
     }
 
-    @Override
+    
     public String put(String key, String value) {
         KeyParams params = getKeyParams(key);
         int index = params.index;
@@ -92,7 +92,7 @@ public class MyHashMap implements Map<String, String> {
             nodesCount++;
         } else {
             Optional<Node> node = findNode(hash, firstNode, key);
-            if (!node.isPresent()) {
+            if (node.isEmpty()) {
                 table[index] = new Node(hash, key, value, firstNode);
                 nodesCount++;
             } else {
@@ -107,8 +107,21 @@ public class MyHashMap implements Map<String, String> {
     }
 
     private Node[] extendArray(Node[] oldArray){
-        Node[] newArray = new Node[oldArray.length * 2];
-        System.arraycopy(oldArray, 0, newArray, 0, oldArray.length);
+        int length = oldArray.length;
+        Node[] newArray = new Node[length * 2];
+        for (Node node: getNodes()){
+            int index = node.hash & (newArray.length - 1);
+            Node n = newArray[index];
+            node.setNext(null);
+            if (n == null){
+                newArray[index] = node;
+            }else{
+                while (n.next != null){
+                    n=n.next;
+                }
+                n.next = node;
+            }
+        }
         return newArray;
     }
 
@@ -122,7 +135,7 @@ public class MyHashMap implements Map<String, String> {
         return Optional.empty();
     }
 
-    @Override
+    
     public String remove(Object key) {
         KeyParams keyParams = getKeyParams(key);
         return removeNode(keyParams);
@@ -160,38 +173,44 @@ public class MyHashMap implements Map<String, String> {
         return null;
     }
 
-    @Override
+    
     public void putAll(Map<? extends String, ? extends String> m) {
-        throw new NotImplementedException();
+        
     }
 
-    @Override
+    
     public void clear() {
-        throw new NotImplementedException();
+        
     }
 
-    @Override
+    
     public Set<String> keySet() {
-        throw new NotImplementedException();
+        return new HashSet<>();
     }
 
-    @Override
+    
     public Collection<String> values() {
-        List<String> values = new ArrayList<>(nodesCount);
+        return getNodes()
+                .stream()
+                .map(n->n.value).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private List<Node> getNodes() {
+        var res = new ArrayList<Node>();
         for (Node node : table) {
             if (node != null) {
                 while (node != null) {
-                    values.add(node.value);
+                    res.add(node);
                     node = node.next;
                 }
             }
         }
-        return values;
+        return res;
     }
 
-    @Override
-    public Set<Entry<String, String>> entrySet() {
-        throw new NotImplementedException();
+
+    public Set<Map.Entry<String, String>> entrySet() {
+        return new HashSet<>();
     }
 
 
@@ -199,7 +218,7 @@ public class MyHashMap implements Map<String, String> {
         return (hash & (table.length - 1));
     }
 
-    static class Node implements Entry<String, String> {
+    static class Node{
 
         final int hash;
         final String key;
@@ -214,20 +233,23 @@ public class MyHashMap implements Map<String, String> {
         }
 
 
-        @Override
         public String getKey() {
             return key;
         }
 
-        @Override
+        
         public String getValue() {
             return value;
         }
 
-        @Override
+        
         public String setValue(String value) {
             this.value = value;
             return value;
+        }
+
+        public void setNext(Node next) {
+            this.next = next;
         }
     }
 }
